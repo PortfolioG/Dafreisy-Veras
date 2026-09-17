@@ -13,11 +13,9 @@ npm run build    # production build → dist/
 Deploy `dist/` to Vercel (or any static host). `vite.config.ts` uses `base: './'` so it also works from a sub-path.
 
 ## Hero turntable
-`src/components/Turntable.tsx` is a scroll-driven canvas frame-sequence player. `src/sections/Hero.tsx` lists the frames:
-```ts
-const DESKTOP_FRAMES = ['./hero/front.webp']
-```
-The hero currently uses a single portrait (pinned, with a subtle scroll drift). For a true 360° rotation, drop a dense sequence (e.g. 48–72 frames, same crop/scale, last frame = first) into `public/hero/` and list them in that array — nothing else changes. The pinned scroll distance is `end: '+=120%'` in `Hero.tsx`.
+`src/components/Turntable.tsx` is a scroll-driven canvas frame-sequence player. `src/sections/Hero.tsx` maps scroll progress (pinned, `end: '+=220%'`) linearly onto 63 rotation frames in `public/hero/seq/` (`d00–d62` desktop 720×912, `m00–m62` mobile 400×507). Frame 0 and frame 62 are identical, so a full scroll returns exactly to the start pose. The first frame paints immediately; the rest stream in.
+
+The frames were extracted from an AI-generated camera-orbit clip of the original portrait (`_source/turntable.mp4`, not committed). To re-generate: produce a 5 s 360° orbit clip, extract with `ffmpeg -i clip.mp4 f%03d.png`, take every 2nd frame, append frame 1, resize and save as WebP with the same names.
 
 ## Content
 All copy, roles, skills, services, education and contact details live in `src/data/content.ts`. Add a LinkedIn URL to `profile.linkedin` to enable the LinkedIn links.
