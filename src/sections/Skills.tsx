@@ -11,6 +11,9 @@ gsap.registerPlugin(ScrollTrigger)
  * Skills deck: pinned section, cards travel horizontally with scroll past a giant
  * outlined "SKILLS" wordmark. The card nearest the centre stands upright at full
  * size; neighbours tilt away and recede, so the deck reads as a hand of cards.
+ * One implementation for every screen size — the layout is measured from the DOM
+ * (card width, gap, viewport) and re-measured on every ScrollTrigger refresh, so
+ * phones, tablets, rotations and window resizes all get the same effect.
  */
 export function Skills() {
   const root = useRef<HTMLElement>(null)
@@ -20,87 +23,76 @@ export function Skills() {
     const section = root.current, el = track.current
     if (!section || !el) return
     const cards = Array.from(el.children) as HTMLElement[]
-    const mm = gsap.matchMedia()
 
-    mm.add('(min-width: 768px)', () => {
-      const layout = () => {
-        const vw = section.clientWidth
-        const cw = cards[0].offsetWidth
-        const gap = parseFloat(getComputedStyle(el).columnGap || getComputedStyle(el).gap) || 0
-        const step = cw + gap
-        return { start: vw / 2 - cw / 2, dist: step * (cards.length - 1), step }
-      }
-      let L = layout()
-      const setX = gsap.quickSetter(el, 'x', 'px')
-      const place = (p: number) => {
-        const x = L.start - p * L.dist
-        setX(x)
-        const centre = section.clientWidth / 2
-        cards.forEach((c, i) => {
-          const cx = x + i * L.step + c.offsetWidth / 2
-          const d = (cx - centre) / L.step          // -n .. n, 0 = centred
-          const t = Math.max(-1.6, Math.min(1.6, d))
-          gsap.set(c, {
-            rotation: t * 9,
-            y: Math.abs(t) * 46,
-            scale: 1 - Math.min(Math.abs(t), 1.6) * 0.09,
-            opacity: 1 - Math.min(Math.abs(t), 1.6) * 0.32,
-            zIndex: 100 - Math.round(Math.abs(t) * 10),
-            transformOrigin: '50% 120%',
-          })
+    const layout = () => {
+      const vw = section.clientWidth
+      const cw = cards[0].offsetWidth
+      const gap = parseFloat(getComputedStyle(el).columnGap || getComputedStyle(el).gap) || 0
+      const step = cw + gap
+      return { start: vw / 2 - cw / 2, dist: step * (cards.length - 1), step }
+    }
+    let L = layout()
+    const setX = gsap.quickSetter(el, 'x', 'px')
+    // Narrow screens get a slightly gentler fan so the neighbours stay legible.
+    const fan = () => (section.clientWidth < 768 ? { rot: 7, lift: 32 } : { rot: 9, lift: 46 })
+    const place = (p: number) => {
+      const x = L.start - p * L.dist
+      setX(x)
+      const centre = section.clientWidth / 2
+      const F = fan()
+      cards.forEach((c, i) => {
+        const cx = x + i * L.step + c.offsetWidth / 2
+        const d = (cx - centre) / L.step          // -n .. n, 0 = centred
+        const t = Math.max(-1.6, Math.min(1.6, d))
+        gsap.set(c, {
+          rotation: t * F.rot,
+          y: Math.abs(t) * F.lift,
+          scale: 1 - Math.min(Math.abs(t), 1.6) * 0.09,
+          opacity: 1 - Math.min(Math.abs(t), 1.6) * 0.32,
+          zIndex: 100 - Math.round(Math.abs(t) * 10),
+          transformOrigin: '50% 120%',
         })
-      }
-      place(0)
-      const st = ScrollTrigger.create({
-        trigger: section,
-        start: 'top top',
-        end: () => `+=${L.dist + section.clientHeight * 0.6}`,
-        pin: true,
-        scrub: 0.6,
-        refreshPriority: -1,
-        onUpdate: (self) => place(self.progress),
-        onRefreshInit: () => { L = layout() },
-        onRefresh: (self) => place(self.progress),
       })
-      return () => st.kill()
+    }
+    place(0)
+    const st = ScrollTrigger.create({
+      trigger: section,
+      start: 'top top',
+      end: () => `+=${L.dist + section.clientHeight * 0.6}`,
+      pin: true,
+      scrub: 0.6,
+      refreshPriority: -1,
+      onUpdate: (self) => place(self.progress),
+      onRefreshInit: () => { L = layout() },
+      onRefresh: (self) => place(self.progress),
     })
-
-    // Mobile: a plain horizontal swipe row, no pin.
-    mm.add('(max-width: 767px)', () => {
-      gsap.set(el, { x: 0 })
-      cards.forEach((c) => gsap.set(c, { clearProps: 'transform,opacity,zIndex' }))
-    })
-
-    return () => mm.revert()
+    return () => st.kill()
   }, [])
 
   return (
-    <section id="skills" ref={root} className="relative overflow-hidden bg-ink py-20 md:h-[100svh] md:py-0" aria-label="Skills">
+    <section id="skills" ref={root} className="relative h-[100svh] overflow-hidden bg-ink" aria-label="Skills">
       {/* ambient red bloom + outlined wordmark, as on the reference */}
       <div className="pointer-events-none absolute -left-40 top-0 h-[70%] w-[60%] rounded-full bg-accent/15 blur-[140px]" />
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <span className="outline-word text-[42vw] md:text-[30vw]">Skills</span>
       </div>
 
-      <div className="relative px-6 md:absolute md:left-10 md:top-10 lg:left-14">
+      <div className="absolute left-6 top-24 md:left-10 md:top-10 lg:left-14">
         <Episode n="03" label="Core Skills" />
       </div>
 
-      <div ref={track}
-        className="relative mt-10 flex gap-6 overflow-x-auto px-6 pb-6 md:absolute md:left-0 md:top-1/2 md:mt-0 md:-translate-y-1/2 md:gap-8 md:overflow-visible md:px-0 md:pb-0"
-        style={{ scrollSnapType: 'x mandatory' }}>
+      <div ref={track} className="absolute left-0 top-1/2 flex -translate-y-1/2 gap-5 md:gap-8 [@media(max-height:700px)]:top-[55%]">
         {skillDeck.map((k, i) => (
           <article key={k.title}
-            className="card w-[82vw] shrink-0 p-7 md:w-[440px] md:p-9"
-            style={{ scrollSnapAlign: 'center' }}
+            className="card w-[min(84vw,440px)] shrink-0 p-6 md:p-9 [@media(max-height:700px)]:p-5"
             data-cursor="view">
             <div className="flex items-center justify-between">
               <span className="tag">{k.label}</span>
               <span className="mono text-[0.58rem] tracking-[0.2em] text-mute">[ {String(i + 1).padStart(2, '0')} / {String(skillDeck.length).padStart(2, '0')} ]</span>
             </div>
-            <h3 className="mt-16 text-3xl font-bold leading-tight tracking-tight text-bone md:mt-20 md:text-[2.1rem]">{k.title}</h3>
-            <p className="mt-4 min-h-[4.5rem] text-sm leading-relaxed text-bone-2">{k.desc}</p>
-            <div className="mt-10 flex flex-wrap gap-2 pr-6">
+            <h3 className="mt-10 text-[1.7rem] font-bold [@media(max-height:700px)]:mt-5 [@media(max-height:700px)]:text-2xl leading-tight tracking-tight text-bone md:mt-20 md:text-[2.1rem]">{k.title}</h3>
+            <p className="mt-3 min-h-[4.5rem] text-sm [@media(max-height:700px)]:min-h-0 leading-relaxed text-bone-2 md:mt-4">{k.desc}</p>
+            <div className="mt-6 flex flex-wrap gap-2 pr-6 md:mt-10">
               {k.chips.map((c) => <span key={c} className="chip">{c}</span>)}
             </div>
           </article>
