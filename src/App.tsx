@@ -7,6 +7,7 @@ import Hero from './sections/Hero'
 import { About, Marquee } from './sections/About'
 import Work from './sections/Work'
 import { Skills, Services, Why, Education } from './sections/Skills'
+import Testimonials from './sections/Testimonials'
 import { Contact, FinalCta, Footer } from './sections/Contact'
 import { useLenis, scrollTo } from './hooks/useLenis'
 
@@ -33,6 +34,7 @@ export default function App() {
         <Services />
         <Why />
         <Education />
+        <Testimonials />
         <Contact />
         <FinalCta onCta={() => scrollTo('#contact')} />
       </main>

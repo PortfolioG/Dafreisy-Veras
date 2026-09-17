@@ -72,9 +72,3 @@ body {
   mask-composite: intersect;
 }
 
-/* 3D turntable card */
-.hero-persp { perspective: 1800px; perspective-origin: 50% 45%; }
-.hero-card { transform-style: preserve-3d; will-change: transform; }
-.hero-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; transform: translateZ(1px); }
-.hero-face-back { transform: rotateY(180deg) translateZ(1px); }
-.hero-shadow { transform: translateZ(-60px); }
