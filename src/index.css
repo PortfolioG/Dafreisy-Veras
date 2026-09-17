@@ -148,3 +148,9 @@ body {
 .hero-glow {
   background: radial-gradient(60% 50% at 50% 60%, rgba(229,9,20,0.22), transparent 70%);
 }
+
+/* Small phones: keep the hero buttons on one row so the copy block stays short
+   and the name never climbs into the portrait's face. */
+@media (max-width: 400px) {
+  .btn-red, .btn-ghost { padding: 0.8rem 1rem; font-size: 0.6rem; letter-spacing: 0.16em; }
+}
