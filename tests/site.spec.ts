@@ -10,6 +10,23 @@ test.describe('Page & assets', () => {
     expect(errors).toEqual([])
   })
 
+  test('link preview (Open Graph / Twitter) is complete and the image resolves', async ({ page, request }) => {
+    await ready(page)
+    const meta = async (sel: string) => page.locator(sel).getAttribute('content')
+    expect(await meta('meta[property="og:title"]')).toMatch(/Dafreisy Veras/)
+    expect(await meta('meta[property="og:description"]')).toBeTruthy()
+    expect(await meta('meta[property="og:image:width"]')).toBe('1200')
+    expect(await meta('meta[property="og:image:height"]')).toBe('630')
+    expect(await meta('meta[name="twitter:card"]')).toBe('summary_large_image')
+    const og = await meta('meta[property="og:image"]')
+    expect(og).toMatch(/^https:\/\/dafreisyveras\.vercel\.app\/og\.jpg/)
+    // The image must be served from this build at its own path (absolute URL points at production).
+    const res = await request.get('/og.jpg')
+    expect(res.status()).toBe(200)
+    expect(res.headers()['content-type']).toMatch(/image\/jpeg/)
+    expect((await res.body()).length).toBeGreaterThan(20_000)
+  })
+
   test('every rotation frame is served', async ({ request }) => {
     for (let i = 0; i < 63; i++) {
       const n = String(i).padStart(2, '0')
