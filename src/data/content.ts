@@ -37,7 +37,6 @@ export type Role = {
   summary: string
   points: string[]
   tags: string[]
-  image?: 'front' | 'quarter'
 }
 
 export const roles: Role[] = [
