@@ -24,23 +24,35 @@ export default function Hero({ started }: { started: boolean }) {
   useEffect(() => {
     if (!started || !root.current) return
     const ctx = gsap.context(() => {
-      // Pinned hero. Scroll progress drives the frame player (a no-op with one frame)
-      // and a slow, linear drift of the portrait so the hold never feels static.
+      // Pinned hero. Scroll progress drives one full, linear 360° turn of the portrait
+      // (scroll down = forward, up = backward; the last frame matches the first),
+      // plus a light sheen and shadow that follow the angle so the turn reads as physical.
+      const setSheen = gsap.quickSetter('.hero-sheen', 'opacity')
+      const setShadow = gsap.quickSetter('.hero-shadow', 'opacity')
+      const setBack = gsap.quickSetter('.hero-back-tint', 'opacity')
       ScrollTrigger.create({
         trigger: root.current,
         start: 'top top',
-        end: '+=120%',
+        end: '+=200%',
         pin: '.hero-stage',
         scrub: true,
-        onUpdate: (self) => handle.current?.setProgress(self.progress),
+        onUpdate: (self) => {
+          const p = self.progress
+          handle.current?.setProgress(p)
+          const a = p * Math.PI * 2
+          const edge = Math.abs(Math.sin(a))          // 0 facing camera, 1 edge-on
+          setSheen(0.55 * edge)
+          setShadow(0.35 + 0.4 * edge)
+          setBack(0.25 + 0.35 * edge)
+        },
       })
-      gsap.to('.hero-frame', {
-        yPercent: -7, ease: 'none',
-        scrollTrigger: { trigger: root.current, start: 'top top', end: '+=120%', scrub: true },
+      gsap.fromTo('.hero-card', { rotationY: 0 }, {
+        rotationY: 360, ease: 'none',
+        scrollTrigger: { trigger: root.current, start: 'top top', end: '+=200%', scrub: true },
       })
       gsap.to('.hero-stage', {
-        opacity: 0.35, ease: 'none',
-        scrollTrigger: { trigger: root.current, start: '+=70%', end: '+=120%', scrub: true },
+        opacity: 0.3, ease: 'none',
+        scrollTrigger: { trigger: root.current, start: '+=165%', end: '+=200%', scrub: true },
       })
       // Text and indicator ease away as the rotation begins.
       gsap.to('.hero-copy', {
@@ -65,8 +77,21 @@ export default function Hero({ started }: { started: boolean }) {
       <div className="hero-stage relative h-[100svh] w-full overflow-hidden">
         {/* Visual — pure portrait, no overlays on the subject */}
         <div className="hero-visual absolute inset-0 flex items-start justify-center pt-[9svh] md:items-end md:pt-0">
-          <div className="hero-frame relative h-[64svh] w-full max-w-[min(92vw,54svh)] md:h-[92svh] md:max-w-[min(70vw,74svh)]" data-cursor="explore">
-            <Turntable frames={frames} handleRef={handle} className="h-full w-full" />
+          <div className="hero-persp relative h-[64svh] w-full max-w-[min(92vw,54svh)] md:h-[92svh] md:max-w-[min(70vw,74svh)]" data-cursor="explore">
+            <div className="hero-shadow pointer-events-none absolute inset-x-[10%] bottom-[2%] h-[10%] rounded-[50%] bg-black blur-2xl" />
+            <div className="hero-card relative h-full w-full">
+              {/* Front */}
+              <div className="hero-face hero-frame absolute inset-0">
+                <Turntable frames={frames} handleRef={handle} className="h-full w-full" />
+                <div className="hero-sheen pointer-events-none absolute inset-0 bg-gradient-to-r from-white/40 via-white/5 to-transparent mix-blend-soft-light" />
+              </div>
+              {/* Back — mirrored portrait, tinted, so the turn never shows a hollow card */}
+              <div className="hero-face hero-face-back hero-frame absolute inset-0">
+                <img src={frames[0]} alt="" aria-hidden="true" draggable={false}
+                  className="h-full w-full object-cover object-[50%_25%] -scale-x-100" />
+                <div className="hero-back-tint pointer-events-none absolute inset-0 bg-ink" />
+              </div>
+            </div>
           </div>
         </div>
 
