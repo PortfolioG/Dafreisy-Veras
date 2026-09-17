@@ -6,7 +6,7 @@ import Cursor from './components/Cursor'
 import Hero from './sections/Hero'
 import { About, Marquee } from './sections/About'
 import Work from './sections/Work'
-import { Skills, Services, Why, Education } from './sections/Skills'
+import { Skills, Services, Why } from './sections/Skills'
 import Testimonials from './sections/Testimonials'
 import { Contact, FinalCta, Footer } from './sections/Contact'
 import { useLenis, scrollTo } from './hooks/useLenis'
@@ -17,7 +17,7 @@ export default function App() {
   useLenis(ready)
 
   useEffect(() => {
-    if (ready) requestAnimationFrame(() => ScrollTrigger.refresh())
+    if (ready) requestAnimationFrame(() => { ScrollTrigger.sort(); ScrollTrigger.refresh() })
   }, [ready])
 
   return (
@@ -27,13 +27,12 @@ export default function App() {
       <Nav />
       <main>
         <Hero started={ready} />
-        <About />
         <Marquee />
-        <Work />
-        <Skills />
+        <About />
         <Services />
+        <Skills />
+        <Work />
         <Why />
-        <Education />
         <Testimonials />
         <Contact />
         <FinalCta onCta={() => scrollTo('#contact')} />
