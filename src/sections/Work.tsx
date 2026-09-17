@@ -1,81 +1,76 @@
 import { useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowUpRight } from 'lucide-react'
 import { useReveal } from '../hooks/useReveal'
 import { roles } from '../data/content'
+import { Episode } from './About'
 
+/** Experience as a Netflix "Originals" row: one episode card per role. */
 export default function Work() {
   const ref = useRef<HTMLElement>(null)
   useReveal(ref)
-  const [open, setOpen] = useState<string | null>(roles[0].n)
+  const [open, setOpen] = useState<string | null>(null)
+  const active = roles.find((r) => r.n === open)
 
   return (
-    <section id="work" ref={ref} className="px-6 py-28 md:px-10 md:py-40 lg:px-14">
-      <div className="grid gap-10 lg:grid-cols-12">
-        <div className="lg:col-span-4">
-          <p className="eyebrow" data-reveal>02 — Experience</p>
-          <h2 className="serif mt-6 text-5xl font-medium leading-[1.02] tracking-[-0.02em] md:text-6xl">
-            <span data-mask className="mask"><span>Selected</span></span>
-            <span data-mask className="mask"><span className="italic text-bone-2">roles.</span></span>
+    <section id="work" ref={ref} className="px-6 py-24 md:px-10 md:py-32 lg:px-14">
+      <div className="flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <Episode n="04" label="Career Archive" />
+          <h2 className="display mt-6 text-6xl leading-[0.9] md:text-8xl">
+            <span data-mask className="mask"><span>Originals</span></span>
           </h2>
-          <p className="mt-8 max-w-sm text-bone-2" data-reveal>
-            From front desk to supervision — a record of taking on more responsibility and keeping operations steady while doing it.
-          </p>
         </div>
-
-        <ol className="lg:col-span-8">
-          {roles.map((r) => {
-            const isOpen = open === r.n
-            return (
-              <li key={r.n} className="border-t hairline last:border-b" data-reveal>
-                <button
-                  onClick={() => setOpen(isOpen ? null : r.n)}
-                  data-cursor="view"
-                  aria-expanded={isOpen}
-                  className="group grid w-full grid-cols-[3rem_1fr_auto] items-baseline gap-4 py-8 text-left md:grid-cols-[4rem_1fr_12rem_2rem]"
-                >
-                  <span className="text-xs tabular-nums text-mute">{r.n}</span>
-                  <span>
-                    <span className={`serif block text-3xl font-medium tracking-tight transition-transform duration-500 md:text-4xl ${isOpen ? 'translate-x-2' : 'group-hover:translate-x-2'}`}>
-                      {r.title}
-                    </span>
-                    <span className="mt-1 block text-sm text-bone-2">{r.company} · {r.place}</span>
-                  </span>
-                  <span className="hidden text-xs uppercase tracking-[0.2em] text-mute md:block">{r.period}</span>
-                  <ArrowUpRight size={18} className={`justify-self-end text-bone-2 transition-transform duration-500 ${isOpen ? 'rotate-90' : 'group-hover:-translate-y-0.5 group-hover:translate-x-0.5'}`} />
-                </button>
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <motion.div
-                      key="body"
-                      initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                      className="overflow-hidden"
-                    >
-                      <div className="grid gap-8 pb-10 pl-12 md:grid-cols-[1fr_1.4fr] md:pl-16">
-                        <div>
-                          <p className="text-xs uppercase tracking-[0.2em] text-mute md:hidden">{r.period}</p>
-                          <p className="mt-2 text-lg leading-relaxed text-bone md:mt-0">{r.summary}</p>
-                          <ul className="mt-6 flex flex-wrap gap-2">
-                            {r.tags.map((t) => (
-                              <li key={t} className="border hairline px-3 py-1 text-[0.65rem] uppercase tracking-[0.18em] text-bone-2">{t}</li>
-                            ))}
-                          </ul>
-                        </div>
-                        <ul className="space-y-3 text-sm leading-relaxed text-bone-2">
-                          {r.points.map((p) => (
-                            <li key={p} className="flex gap-4"><span className="mt-[0.6em] h-px w-4 shrink-0 bg-accent" />{p}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </li>
-            )
-          })}
-        </ol>
+        <span className="mono text-[0.6rem] uppercase tracking-[0.22em] text-mute" data-reveal>Archive_slots · {roles.length} episodes</span>
       </div>
+
+      <ol className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {roles.map((r, i) => (
+          <li key={r.n} data-reveal data-delay={String((i % 3) * 0.08)}>
+            <button onClick={() => setOpen(r.n)} data-cursor="view"
+              className="card group block h-full w-full p-6 text-left transition-transform duration-500 hover:-translate-y-1.5 hover:border-white/20">
+              <div className="flex items-center gap-3">
+                <span className="mono text-[0.6rem] tracking-[0.2em] text-bone">S01 E{r.n}</span>
+                <span className="mono text-[0.6rem] tracking-[0.1em] text-[#46d369]">{r.match}</span>
+                <span className="badge !px-1.5 !py-0.5 !text-[0.5rem]">HD</span>
+              </div>
+              <p className="tag mt-6 inline-block">{r.category}</p>
+              <h3 className="mt-4 text-2xl font-bold leading-tight tracking-tight text-bone">{r.title}</h3>
+              <p className="mono mt-1 text-[0.58rem] uppercase tracking-[0.15em] text-mute">{r.company} · {r.period}</p>
+              <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-bone-2">{r.summary}</p>
+              <div className="mt-6 flex flex-wrap gap-2 pr-6">
+                {r.tags.slice(0, 4).map((t) => <span key={t} className="chip">{t}</span>)}
+              </div>
+            </button>
+          </li>
+        ))}
+      </ol>
+
+      <AnimatePresence>
+        {active && (
+          <motion.div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 p-4 backdrop-blur-sm md:items-center"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpen(null)}>
+            <motion.div role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}
+              initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="card max-h-[85vh] w-full max-w-2xl overflow-y-auto p-7 md:p-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="mono text-[0.6rem] tracking-[0.2em] text-bone">S01 E{active.n}</span>
+                  <span className="mono text-[0.6rem] text-[#46d369]">{active.match}</span>
+                </div>
+                <button onClick={() => setOpen(null)} className="mono text-[0.6rem] uppercase tracking-[0.2em] text-mute hover:text-bone">Close ✕</button>
+              </div>
+              <p className="tag mt-6 inline-block">{active.category}</p>
+              <h3 className="mt-4 text-3xl font-bold tracking-tight text-bone">{active.title}</h3>
+              <p className="mono mt-1 text-[0.6rem] uppercase tracking-[0.15em] text-mute">{active.company} · {active.place} · {active.period}</p>
+              <p className="mt-6 text-base leading-relaxed text-bone-2">{active.summary}</p>
+              <ul className="mt-6 space-y-3">
+                {active.points.map((p) => <li key={p} className="flex gap-3 text-sm leading-relaxed text-bone-2"><span className="text-accent">›</span>{p}</li>)}
+              </ul>
+              <div className="mt-8 flex flex-wrap gap-2">{active.tags.map((t) => <span key={t} className="chip">{t}</span>)}</div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }
