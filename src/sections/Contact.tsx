@@ -4,18 +4,49 @@ import { useReveal } from '../hooks/useReveal'
 import { profile } from '../data/content'
 import { Episode } from './About'
 
+/** Web3Forms delivers submissions straight to profile.email. The key is public by design. */
+const WEB3FORMS_KEY = 'f65370bd-a403-4ac9-8724-76ed678d1e8c'
+type Status = 'idle' | 'sending' | 'sent' | 'error'
+
 export function Contact() {
   const ref = useRef<HTMLElement>(null)
   useReveal(ref)
-  const [sent, setSent] = useState(false)
+  const [status, setStatus] = useState<Status>('idle')
 
-  const submit = (e: FormEvent<HTMLFormElement>) => {
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    const subject = encodeURIComponent(`${fd.get('type')} — ${fd.get('name')}`)
-    const body = encodeURIComponent(`${fd.get('message')}\n\n— ${fd.get('name')} (${fd.get('email')})`)
-    window.location.href = `mailto:${profile.email}?subject=${subject}&body=${body}`
-    setSent(true)
+    const form = e.currentTarget
+    const fd = new FormData(form)
+    if (fd.get('botcheck')) return                       // honeypot: bots fill it, people don't
+    const name = String(fd.get('name') ?? '').trim()
+    const email = String(fd.get('email') ?? '').trim()
+    const type = String(fd.get('type') ?? '')
+    const message = String(fd.get('message') ?? '').trim()
+
+    setStatus('sending')
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_KEY,
+          subject: `[Portfolio] ${type} — ${name}`,
+          from_name: 'dafreisyveras.vercel.app',
+          name, email, type, message,
+          replyto: email,
+        }),
+      })
+      const data = (await res.json()) as { success?: boolean }
+      if (!res.ok || !data.success) throw new Error('send failed')
+      setStatus('sent')
+      form.reset()
+    } catch {
+      // Fallback: hand the message to the visitor's own email client.
+      setStatus('error')
+      const subject = encodeURIComponent(`${type} — ${name}`)
+      const body = encodeURIComponent(`${message}\n\n— ${name} (${email})`)
+      window.location.href = `mailto:${profile.email}?subject=${subject}&body=${body}`
+    }
   }
 
   const field = 'w-full rounded-md border border-white/10 bg-[#0e0e0e] px-4 py-3.5 text-sm text-bone placeholder:text-mute focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50'
@@ -40,8 +71,9 @@ export function Contact() {
           </ul>
         </div>
 
-        <form onSubmit={submit} className="card p-7 md:p-9 lg:col-span-7" data-reveal>
+        <form onSubmit={submit} className="card p-7 md:p-9 lg:col-span-7" data-reveal aria-live="polite">
           <p className="mono text-[0.6rem] uppercase tracking-[0.22em] text-accent">// Direct message</p>
+          <input type="checkbox" name="botcheck" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
           <div className="mt-6 grid gap-5 md:grid-cols-2">
             <label className="block"><span className="eyebrow">Name</span><input name="name" required className={`${field} mt-2`} placeholder="Your name" /></label>
             <label className="block"><span className="eyebrow">Email</span><input name="email" type="email" required className={`${field} mt-2`} placeholder="you@company.com" /></label>
@@ -52,9 +84,15 @@ export function Contact() {
             </select>
           </label>
           <label className="mt-5 block"><span className="eyebrow">Message</span><textarea name="message" rows={5} required className={`${field} mt-2 resize-none`} placeholder="Tell me about the role or the team." /></label>
-          <p className="mono mt-4 text-[0.55rem] leading-relaxed tracking-[0.05em] text-mute">This form opens your email client — nothing is stored on this site.</p>
-          <button type="submit" data-cursor="link" className="btn-red group mt-6 inline-flex items-center gap-3">
-            {sent ? 'Opening your email app' : 'Send message'} <ArrowRight size={14} className="transition-transform duration-500 group-hover:translate-x-1" />
+          <p className="mono mt-4 text-[0.55rem] leading-relaxed tracking-[0.05em] text-mute">
+            {status === 'sent' ? 'Delivered. Dafreisy will reply to the address you gave.'
+              : status === 'error' ? 'Direct send failed — opening your email app instead.'
+              : 'Your message is delivered straight to Dafreisy’s inbox.'}
+          </p>
+          <button type="submit" data-cursor="link" disabled={status === 'sending' || status === 'sent'}
+            className="btn-red group mt-6 inline-flex items-center gap-3 disabled:cursor-default disabled:opacity-70">
+            {status === 'sending' ? 'Sending…' : status === 'sent' ? 'Message sent ✓' : 'Send message'}
+            {status === 'idle' && <ArrowRight size={14} className="transition-transform duration-500 group-hover:translate-x-1" />}
           </button>
         </form>
       </div>
