@@ -20,12 +20,33 @@ export const stats = [
 ]
 
 export const marquee = [
-  'Office Operations',
-  'Staff Supervision',
-  'Scheduling & Coverage',
-  'Records & Compliance',
-  'Billing & AP Coordination',
-  'Bilingual Service',
+  'FEATURE ROLE // OFFICE OPERATIONS',
+  'ORIGINAL SERIES // STAFF SUPERVISION',
+  'BLOCKBUSTER // SCHEDULING & COVERAGE',
+  'ACCLAIMED // RECORDS & COMPLIANCE',
+  'NOW STREAMING // BILLING & AP COORDINATION',
+  'BILINGUAL // ENGLISH & SPANISH',
+]
+
+export const heroStats = ['6+ Years', 'Office Ops • Staff • Records', 'Bilingual EN/ES']
+
+export const milestones = [
+  'Promoted twice within one year at Vitra Health — three roles in twelve months.',
+  'Supervises a 30+ person care team serving more than 2,000 individuals.',
+  'Dean’s List and President’s List (Fall 2025, Spring 2026), Southern New Hampshire University.',
+  'CPR and Home Health Aide certified; native English and Spanish.',
+]
+
+export const toolkit = ['Microsoft Excel', 'Outlook', 'Word', 'Google Workspace', 'Salesforce', 'Epic', 'eClinicalWorks', 'EHR Systems']
+
+/** Skills deck — one card per competency, with the concrete tools/methods as chips. */
+export const skillDeck: { label: string; title: string; desc: string; chips: string[] }[] = [
+  { label: 'Operations', title: 'Office & Workflow Coordination', desc: 'Running the daily rhythm of a professional office — phones, mail, calendars, travel, meetings and supplies — so nothing slips.', chips: ['Calendar & Meetings', 'Travel', 'Supply Inventory', 'Purchasing', 'Front Desk'] },
+  { label: 'People', title: 'Staff Supervision & Coaching', desc: 'Leading teams of 25–30+: scheduling, call-out coverage, one-on-ones, onboarding, performance follow-up and escalations.', chips: ['Scheduling', 'Coverage', 'One-on-Ones', 'Onboarding', 'Escalations'] },
+  { label: 'Records', title: 'Documentation & Compliance', desc: 'Accurate charts, contracts, admission records and reports — reviewed, corrected and kept confidential to standard.', chips: ['EHR Review', 'Filing Systems', 'QI Follow-up', 'Confidentiality', 'Reporting'] },
+  { label: 'Finance', title: 'Billing & Accounts Payable', desc: 'Invoice preparation, AP tracking, insurance verification, copay collection and payment processing without loose ends.', chips: ['Invoicing', 'AP Tracking', 'Insurance Verification', 'Payments', 'CCT Billing'] },
+  { label: 'Systems', title: 'Healthcare & Office Software', desc: 'Fluent across the tools that run a modern office and a clinical practice.', chips: ['Epic', 'eClinicalWorks', 'Salesforce', 'Excel', 'Outlook', 'Google Workspace'] },
+  { label: 'Service', title: 'Client & Patient Experience', desc: 'A calm, welcoming and dependable experience for patients, families and partners — in English and Spanish.', chips: ['Bilingual EN/ES', 'Patient Access', 'Intake', 'De-escalation', 'Follow-through'] },
 ]
 
 export type Role = {
@@ -37,6 +58,8 @@ export type Role = {
   summary: string
   points: string[]
   tags: string[]
+  match: string
+  category: string
 }
 
 export const roles: Role[] = [
@@ -56,6 +79,8 @@ export const roles: Role[] = [
       'Partners with clinical, billing, finance and leadership on CCT billing and workflow issues',
     ],
     tags: ['Leadership', 'EHR', 'Quality Improvement', 'Billing'],
+    match: '99% Match',
+    category: 'TEAM LEADERSHIP',
   },
   {
     n: '02',
@@ -72,6 +97,8 @@ export const roles: Role[] = [
       'Supply inventory monitoring and purchasing coordination',
     ],
     tags: ['Office Operations', 'Accounts Payable', 'Filing Systems', 'Inventory'],
+    match: '98% Match',
+    category: 'OFFICE OPERATIONS',
   },
   {
     n: '03',
@@ -87,6 +114,8 @@ export const roles: Role[] = [
       'Built trust with clients and families through dependable follow-through',
     ],
     tags: ['Case Management', 'Documentation', 'Client Relations'],
+    match: '97% Match',
+    category: 'CASE MANAGEMENT',
   },
   {
     n: '04',
@@ -102,6 +131,8 @@ export const roles: Role[] = [
       'Maintained accurate medical records and tracked outstanding requests',
     ],
     tags: ['Epic', 'Scheduling', 'Insurance Verification', 'Patient Access'],
+    match: '98% Match',
+    category: 'PATIENT ACCESS',
   },
   {
     n: '05',
@@ -117,6 +148,8 @@ export const roles: Role[] = [
       'Maintained organization and confidentiality during high-volume periods',
     ],
     tags: ['eClinicalWorks', 'Front Office', 'Payments'],
+    match: '96% Match',
+    category: 'FRONT OFFICE',
   },
   {
     n: '06',
@@ -132,6 +165,8 @@ export const roles: Role[] = [
       'Supply and inventory tracking, purchasing, marketing materials and social content',
     ],
     tags: ['Scheduling', 'Invoicing', 'Client Intake', 'Business Development'],
+    match: '97% Match',
+    category: 'ADMIN & SCHEDULING',
   },
 ]
 
