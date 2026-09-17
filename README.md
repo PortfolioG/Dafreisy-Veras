@@ -10,7 +10,7 @@ npm install
 npm run dev      # local dev server
 npm run build    # production build → dist/
 ```
-Deploy `dist/` to Vercel (or any static host). `vite.config.ts` uses `base: './'` so it also works from a sub-path.
+Live at https://dafreisyveras.vercel.app (alias of dafreisy-veras.vercel.app). Deploy `dist/` to Vercel (or any static host). `vite.config.ts` uses `base: './'` so it also works from a sub-path.
 
 ## Hero turntable
 `src/components/Turntable.tsx` is a scroll-driven canvas frame-sequence player. `src/sections/Hero.tsx` maps scroll progress (pinned, `end: '+=220%'`) linearly onto 63 rotation frames in `public/hero/seq/` (`d00–d62` desktop 720×912, `m00–m62` mobile 400×507). Frame 0 and frame 62 are identical, so a full scroll returns exactly to the start pose. The first frame paints immediately; the rest stream in.
