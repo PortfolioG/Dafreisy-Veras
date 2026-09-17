@@ -168,3 +168,6 @@ export const education = [
 ]
 
 export const certifications = ['CPR Certified', 'Home Health Aide Certified']
+
+/** §20 — real testimonials only. Leave empty until genuine quotes are supplied; the section hides itself. */
+export const testimonials: { quote: string; name: string; role: string }[] = []
