@@ -35,10 +35,10 @@ export default function Cursor() {
   const size = mode === 'label' ? 88 : mode === 'link' ? 48 : 28
   return (
     <div className="pointer-events-none fixed inset-0 z-[90] hidden [@media(pointer:fine)]:block" aria-hidden="true">
-      <div ref={dot} className="absolute left-0 top-0 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-bone" />
+      <div ref={dot} className="absolute left-0 top-0 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent shadow-[0_0_8px_#e50914]" />
       <div ref={ring}
-        className="absolute left-0 top-0 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-bone/70 text-[0.6rem] uppercase tracking-[0.25em] text-ink transition-[width,height,background-color] duration-300"
-        style={{ width: size, height: size, backgroundColor: mode === 'label' ? '#e8e2d6' : 'transparent' }}>
+        className="absolute left-0 top-0 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-accent/80 mono text-[0.55rem] uppercase tracking-[0.25em] text-white transition-[width,height,background-color] duration-300"
+        style={{ width: size, height: size, backgroundColor: mode === 'label' ? '#e50914' : 'transparent' }}>
         {label}
       </div>
     </div>
