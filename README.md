@@ -15,9 +15,9 @@ Deploy `dist/` to Vercel (or any static host). `vite.config.ts` uses `base: './'
 ## Hero turntable
 `src/components/Turntable.tsx` is a scroll-driven canvas frame-sequence player. `src/sections/Hero.tsx` lists the frames:
 ```ts
-const DESKTOP_FRAMES = ['./hero/front.webp', './hero/quarter.webp', './hero/front.webp']
+const DESKTOP_FRAMES = ['./hero/front.webp']
 ```
-Only two source photos were available, so the sequence is front → three-quarter → front. For a true 360° rotation, drop a dense sequence (e.g. 48–72 frames, same crop/scale, last frame = first) into `public/hero/` and list them in that array — nothing else changes. The pinned scroll distance is `end: '+=220%'` in `Hero.tsx`.
+The hero currently uses a single portrait (pinned, with a subtle scroll drift). For a true 360° rotation, drop a dense sequence (e.g. 48–72 frames, same crop/scale, last frame = first) into `public/hero/` and list them in that array — nothing else changes. The pinned scroll distance is `end: '+=120%'` in `Hero.tsx`.
 
 ## Content
 All copy, roles, skills, services, education and contact details live in `src/data/content.ts`. Add a LinkedIn URL to `profile.linkedin` to enable the LinkedIn links.
