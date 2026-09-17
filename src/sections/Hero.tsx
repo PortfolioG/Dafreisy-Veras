@@ -8,9 +8,10 @@ import { profile } from '../data/content'
 
 gsap.registerPlugin(ScrollTrigger)
 
-/** Rotation frames: first and last must match. Replace with a dense sequence for a full turntable. */
-const DESKTOP_FRAMES = ['./hero/front.webp', './hero/quarter.webp', './hero/front.webp']
-const MOBILE_FRAMES = ['./hero/front-m.webp', './hero/quarter-m.webp', './hero/front-m.webp']
+/** Hero frames. A single portrait today; to enable a scroll-driven turntable, list a
+ *  dense rotation sequence here (first and last frame matching) — nothing else changes. */
+const DESKTOP_FRAMES = ['./hero/front.webp']
+const MOBILE_FRAMES = ['./hero/front-m.webp']
 
 export default function Hero({ started }: { started: boolean }) {
   const root = useRef<HTMLElement>(null)
@@ -23,14 +24,23 @@ export default function Hero({ started }: { started: boolean }) {
   useEffect(() => {
     if (!started || !root.current) return
     const ctx = gsap.context(() => {
-      // Scroll → rotation, pinned. Linear scrub so position maps 1:1 to scroll.
+      // Pinned hero. Scroll progress drives the frame player (a no-op with one frame)
+      // and a slow, linear drift of the portrait so the hold never feels static.
       ScrollTrigger.create({
         trigger: root.current,
         start: 'top top',
-        end: '+=220%',
+        end: '+=120%',
         pin: '.hero-stage',
         scrub: true,
         onUpdate: (self) => handle.current?.setProgress(self.progress),
+      })
+      gsap.to('.hero-frame', {
+        yPercent: -7, ease: 'none',
+        scrollTrigger: { trigger: root.current, start: 'top top', end: '+=120%', scrub: true },
+      })
+      gsap.to('.hero-stage', {
+        opacity: 0.35, ease: 'none',
+        scrollTrigger: { trigger: root.current, start: '+=70%', end: '+=120%', scrub: true },
       })
       // Text and indicator ease away as the rotation begins.
       gsap.to('.hero-copy', {
