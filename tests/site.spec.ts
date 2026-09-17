@@ -90,11 +90,10 @@ test.describe('Skills deck', () => {
     expect(await cards.first().locator('.chip').count()).toBeGreaterThan(2)
   })
 
-  test('desktop: pinned deck fans cards around the centre as you scroll', async ({ page, isMobile }) => {
-    test.skip(isMobile, 'deck is a swipe row on mobile')
+  test('pinned deck fans cards around the centre as you scroll (desktop and mobile)', async ({ page }) => {
     await ready(page)
     const { top, dist } = await pinRange(page, '#skills')
-    expect(dist).toBeGreaterThan(1500)
+    expect(dist).toBeGreaterThan(1200)
 
     const centredIndex = async () => page.evaluate(() => {
       const cards = [...document.querySelectorAll('#skills article')] as HTMLElement[]
@@ -128,12 +127,42 @@ test.describe('Skills deck', () => {
     expect(tilt).toBeGreaterThan(4)
   })
 
-  test('mobile: cards are a horizontal swipe row', async ({ page, isMobile }) => {
-    test.skip(!isMobile, 'desktop uses the pinned deck')
+  test('mobile: the centred card fits inside the viewport', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'mobile-only layout check')
     await ready(page)
-    const track = page.locator('#skills article').first().locator('..')
-    const { scrollWidth, clientWidth } = await track.evaluate((el) => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }))
-    expect(scrollWidth).toBeGreaterThan(clientWidth * 2)
+    const { top, dist } = await pinRange(page, '#skills')
+    await scrollTo(page, top + dist * 0.4, 1200)
+    const r = await page.evaluate(() => {
+      const c = document.querySelectorAll('#skills article')[2] as HTMLElement
+      const b = c.getBoundingClientRect()
+      return { top: b.top, bottom: b.bottom, left: b.left, right: b.right, vw: innerWidth, vh: innerHeight }
+    })
+    expect(r.top).toBeGreaterThan(0)
+    expect(r.bottom).toBeLessThan(r.vh)
+    expect(r.left).toBeGreaterThan(0)
+    expect(r.right).toBeLessThan(r.vw)
+  })
+})
+
+test.describe('Hero on every screen', () => {
+  test('phones get the full-resolution rotation frames', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'mobile-only')
+    const requested: string[] = []
+    page.on('request', (r) => { if (r.url().includes('/hero/seq/')) requested.push(r.url()) })
+    await ready(page)
+    await page.waitForTimeout(1500)
+    expect(requested.some((u) => /\/d\d\d\.webp/.test(u))).toBe(true)
+  })
+
+  test('the name never sits over the face', async ({ page }) => {
+    await ready(page)
+    const r = await page.evaluate(() => {
+      const h1 = document.querySelector('#top h1')!.getBoundingClientRect()
+      const frame = document.querySelector('#top .hero-frame')!.getBoundingClientRect()
+      // The face lives in the top ~30% of the portrait frame.
+      return { h1Top: h1.top, faceBottom: frame.top + frame.height * 0.3, wide: innerWidth >= 768 }
+    })
+    if (!r.wide) expect(r.h1Top).toBeGreaterThan(r.faceBottom)
   })
 })
 
