@@ -5,6 +5,11 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
+// Mobile browsers resize the viewport as the address bar shows and hides while
+// scrolling. Without this, every pinned section (hero turntable, skills deck)
+// would re-measure mid-scroll and jump. Real orientation changes still refresh.
+ScrollTrigger.config({ ignoreMobileResize: true })
+
 let lenisInstance: Lenis | null = null
 export const getLenis = () => lenisInstance
 
@@ -18,7 +23,12 @@ export function useLenis(enabled: boolean) {
     const tick = (t: number) => lenis.raf(t * 1000)
     gsap.ticker.add(tick)
     gsap.ticker.lagSmoothing(0)
+    // Orientation change: wait for the new viewport to settle, then re-measure
+    // every pin distance and the deck layout.
+    const onOrientation = () => setTimeout(() => ScrollTrigger.refresh(), 350)
+    window.addEventListener('orientationchange', onOrientation)
     return () => {
+      window.removeEventListener('orientationchange', onOrientation)
       gsap.ticker.remove(tick)
       lenis.destroy()
       lenisInstance = null
