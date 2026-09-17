@@ -136,12 +136,37 @@ test.describe('Experience & contact', () => {
     await expect(dialog).toHaveCount(0)
   })
 
-  test('contact form is present and requires its fields', async ({ page }) => {
+  test('contact form posts to Web3Forms and shows a sent state', async ({ page }) => {
     await ready(page)
     const form = page.locator('#contact form')
     await expect(form.locator('input[name=name]')).toHaveAttribute('required', '')
     await expect(form.locator('input[name=email]')).toHaveAttribute('type', 'email')
     await expect(form.locator('textarea[name=message]')).toHaveAttribute('required', '')
-    await expect(form.locator('button[type=submit]')).toContainText(/send message/i)
+
+    // Intercept the delivery endpoint so tests never send real mail.
+    let posted: Record<string, unknown> | null = null
+    await page.route('https://api.web3forms.com/submit', async (route) => {
+      posted = route.request().postDataJSON()
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) })
+    })
+    await form.scrollIntoViewIfNeeded()
+    await form.locator('input[name=name]').fill('Test Recruiter')
+    await form.locator('input[name=email]').fill('recruiter@example.com')
+    await form.locator('textarea[name=message]').fill('Automated test message.')
+    await form.locator('button[type=submit]').click()
+    await expect(form.locator('button[type=submit]')).toContainText(/message sent/i)
+    expect(posted).toMatchObject({ name: 'Test Recruiter', email: 'recruiter@example.com', replyto: 'recruiter@example.com' })
+    expect((posted as Record<string, unknown>).access_key).toMatch(/^[0-9a-f-]{36}$/)
+  })
+
+  test('contact form falls back to mailto if delivery fails', async ({ page }) => {
+    await ready(page)
+    const form = page.locator('#contact form')
+    await page.route('https://api.web3forms.com/submit', (route) => route.fulfill({ status: 500, body: '{}' }))
+    await form.scrollIntoViewIfNeeded()
+    await form.locator('input[name=name]').fill('A'); await form.locator('input[name=email]').fill('a@b.co'); await form.locator('textarea[name=message]').fill('hi')
+    await form.locator('button[type=submit]').click()
+    // Playwright can't intercept mailto: navigations; the visible fallback state is the contract.
+    await expect(form).toContainText(/opening your email app/i)
   })
 })
