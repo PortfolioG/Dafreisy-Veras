@@ -1,12 +1,11 @@
 import { useEffect, useRef } from 'react'
 
 /**
- * Scroll-driven frame-sequence player.
+ * Scroll-driven frame-sequence player (the 360° turntable).
  * `frames` is an ordered list of image URLs for one full rotation; the last frame
- * should visually match the first so a complete pass returns to the start pose.
- * Rendering blends the two nearest frames so motion stays smooth even with a
- * sparse sequence. Swap in a dense 360° sequence (e.g. 72 frames) without
- * touching anything else.
+ * matches the first so a complete pass returns to the start pose.
+ * The first frame is painted as soon as it arrives; the rest stream in and the
+ * player always draws the nearest frame it has, blending neighbours for smoothness.
  */
 export type TurntableHandle = { setProgress: (p: number) => void }
 
@@ -26,10 +25,11 @@ export default function Turntable({ frames, handleRef, className, onReady }: Pro
     const ctx = canvas.getContext('2d', { alpha: false })
     if (!ctx) return
 
-    let images: HTMLImageElement[] = []
+    const images: (HTMLImageElement | null)[] = new Array(frames.length).fill(null)
     let progress = 0
     let raf = 0
     let dirty = true
+    let cancelled = false
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
 
     const resize = () => {
@@ -43,24 +43,34 @@ export default function Turntable({ frames, handleRef, className, onReady }: Pro
       const cw = canvas.width, ch = canvas.height
       const s = Math.max(cw / img.naturalWidth, ch / img.naturalHeight)
       const dw = img.naturalWidth * s, dh = img.naturalHeight * s
-      // anchor slightly toward the top so the face never gets cropped
+      // anchor toward the top so the face is never cropped
       const dx = (cw - dw) / 2, dy = (ch - dh) * 0.25
       ctx.globalAlpha = alpha
       ctx.drawImage(img, dx, dy, dw, dh)
     }
 
+    /** nearest loaded frame at or below i, else above */
+    const nearest = (i: number) => {
+      for (let k = i; k >= 0; k--) if (images[k]) return k
+      for (let k = i + 1; k < images.length; k++) if (images[k]) return k
+      return -1
+    }
+
     const render = () => {
       raf = requestAnimationFrame(render)
-      if (!dirty || images.length === 0) return
+      if (!dirty) return
       dirty = false
       const n = images.length
       const f = Math.min(Math.max(progress, 0), 1) * (n - 1)
       const i = Math.floor(f)
       const t = f - i
+      const a = nearest(i)
+      if (a < 0) return
       ctx.fillStyle = '#0b0b0c'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
-      drawCover(images[i], 1)
-      if (t > 0 && i + 1 < n) drawCover(images[i + 1], t)
+      drawCover(images[a]!, 1)
+      const b = i + 1 < n ? images[i + 1] : null
+      if (t > 0 && b && a === i) drawCover(b, t)
       ctx.globalAlpha = 1
     }
 
@@ -70,21 +80,24 @@ export default function Turntable({ frames, handleRef, className, onReady }: Pro
       },
     }
 
-    Promise.all(
-      frames.map(
-        (src) =>
-          new Promise<HTMLImageElement>((res, rej) => {
-            const img = new Image()
-            img.decoding = 'async'
-            img.onload = () => res(img)
-            img.onerror = rej
-            img.src = src
-          }),
-      ),
-    ).then((imgs) => {
-      images = imgs
-      dirty = true
+    const load = (k: number) =>
+      new Promise<void>((res) => {
+        const img = new Image()
+        img.decoding = 'async'
+        img.onload = () => { if (!cancelled) { images[k] = img; dirty = true } res() }
+        img.onerror = () => res()
+        img.src = frames[k]
+      })
+
+    // First frame first, then the rest in small parallel batches.
+    load(0).then(async () => {
       onReady?.()
+      const rest = frames.map((_, k) => k).slice(1)
+      const batch = 6
+      for (let s = 0; s < rest.length; s += batch) {
+        if (cancelled) return
+        await Promise.all(rest.slice(s, s + batch).map(load))
+      }
     })
 
     resize()
@@ -92,6 +105,7 @@ export default function Turntable({ frames, handleRef, className, onReady }: Pro
     ro.observe(canvas)
     raf = requestAnimationFrame(render)
     return () => {
+      cancelled = true
       cancelAnimationFrame(raf)
       ro.disconnect()
       handleRef.current = null

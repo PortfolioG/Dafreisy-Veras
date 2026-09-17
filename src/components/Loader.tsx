@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { profile } from '../data/content'
 
-const CRITICAL = ['./hero/front.webp']
+const CRITICAL = ['./hero/seq/d00.webp', './hero/seq/m00.webp']
 
 export default function Loader({ onDone }: { onDone: () => void }) {
   const [p, setP] = useState(0)
